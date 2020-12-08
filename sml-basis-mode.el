@@ -3,7 +3,7 @@
 ;; sml-basis-mode is released under the GPLv3 license.  See the file
 ;; COPYING for details.
 
-;; Author: Adam Massmann <akm2203@columbia..edu>
+;; Author: Adam Massmann <akm2203@columbia.edu>
 ;; URL: https://github.com/massma/sml-basis-mode
 ;; Version: 0.0.1
 ;; Keywords: mlton basis standard-ml
@@ -20,16 +20,9 @@
 ;;       automatically recompile new basis files with MLton, we get
 ;;       access to the new information
 ;;
-;; - [ ] Define a local keymap for the *SML-basis* buffer which binds
-;;       functions for specific search types (signature, val,
-;;       structure, exn, etc.)?
+;; - [ ] Add keybindings to the *SML-basis* buffer for specific search
+;;       types (signature, val, structure, exn, etc.)?
 ;;
-;; - [ ] Implement a "goto thing at point" for the *SML-basis* buffer
-;;       (by default this will only work on custom basis files, and
-;;       when filenames within the basis file are relative to the
-;;       directory containing the basis file). So, it actually might
-;;       not be that useful. I'll wait and see if it is something I
-;;       feel like is missing.
 
 
 ;;; Code:
@@ -98,7 +91,7 @@ TYPE is usually something like \"val\", \"signature\", etc."
   (rx "
 " (or "val" "signature" "exn" "type" "con" "datatype") " "))
 
-(defun sml-basis-regexp-search ()
+(defun sml-basis-regexp-identifier-search ()
   "Default regexp search for an identifier."
   (interactive)
   (sml-basis-generic-regexp-search
@@ -157,7 +150,7 @@ symbol at point."
        (concat "Basis search term (default: " default-sym "): ")
        nil nil default-sym))))
   (sml-basis-maybe-switch-buffer)
-  (sml-basis-val-search)
+  (sml-basis-regexp-identifier-search)
   (isearch-yank-string sym))
 
 (defun sml-basis-type-signature-search ()
@@ -173,6 +166,24 @@ symbol at point."
   (interactive)
   (sml-basis-maybe-switch-buffer))
 
+(defun sml-basis-goto-item ()
+  "Navigate to the file and location of the thing at point.
+Note that this will only work if file paths in your basis file
+are relative to the directory containing your basis file (so, for
+example, this function will NOT work for the default basis file
+that ships with sml-basis-mode!"
+  (interactive)
+  (let ((init-loc (point)))
+    (re-search-forward "(\\* @ \\(.*\\) \\([0-9]+\\)\\.\\([0-9]+\\)-\\([0-9]+\\)\\.\\([0-9]+\\) \\*)")
+    (let ((rel-path (match-string 1))
+          (line-num (string-to-number (match-string 2)))
+          (col-num (string-to-number (match-string 3))))
+      (goto-char init-loc)
+      (find-file (concat (file-name-directory (buffer-file-name)) rel-path))
+      (goto-char (point-min))
+      (forward-line (1- line-num))
+      (goto-char (+ (point) (1- col-num))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Mode
 
@@ -184,18 +195,22 @@ symbol at point."
     map)
   "The keymap associated with `sml-basis-mode'.")
 
-(defvar sml-basis-in-basis-file-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-v") 'sml-)))
-
 (define-minor-mode sml-basis-mode
-  "Minor mode for searching MLton's basis files
-"
+  "Minor mode for searching MLton's basis files.
+
+\\{sml-basis-mode-map}"
   :lighter " basis"
+  :after-hook
   (if (not (member sml-basis-buffer (mapcar 'buffer-name (buffer-list))))
       (let ((buffer (current-buffer)))
         (find-file-read-only sml-basis-file)
         (rename-buffer sml-basis-buffer)
+        (let ((oldmap (cdr (assoc 'sml-basis-mode minor-mode-map-alist)))
+              (newmap (make-sparse-keymap)))
+          (set-keymap-parent newmap oldmap)
+          (define-key newmap (kbd "M-.") 'sml-basis-goto-item)
+          (make-local-variable 'minor-mode-overriding-map-alist)
+          (push `(sml-basis-mode . ,newmap) minor-mode-overriding-map-alist))
         (switch-to-buffer buffer))))
 
 (provide 'sml-basis-mode)
