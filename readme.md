@@ -24,11 +24,7 @@ MLton's implementation of the Standard ML Basis Library. However you
 can customize `sml-basis-file` to use your own basis file, and this is
 recommended in order to expose your own code to the search, and to
 allow you to jump to source code from the basis file (see the function
-`sml-basis-goto-item`, bound to `M-.` in the buffer `*SML-basis*`). If
-you use [MLton's Bg Build Mode](http://mlton.org/EmacsBgBuildMode) and
-emacs' `auto-revert`, pointing to your own basis file is really nice
-because the search source will automatically update everytime you save
-a file (assuming you compile with `-show-basis <path-to-basis-file>`).
+`sml-basis-goto-item`, bound to `M-.` in the buffer `*SML-basis*`).
 
 Functionality-wise, the end goal is to fill a similar role as
 [hoogle](https://hoogle.haskell.org/), but simpler (and very crude and
