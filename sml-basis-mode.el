@@ -174,6 +174,7 @@ example, this function will NOT work for the default basis file
 that ships with sml-basis-mode!"
   (interactive)
   (let ((init-loc (point)))
+    (move-beginning-of-line nil)
     (re-search-forward "(\\* @ \\(.*\\) \\([0-9]+\\)\\.\\([0-9]+\\)-\\([0-9]+\\)\\.\\([0-9]+\\) \\*)")
     (let ((rel-path (match-string 1))
           (line-num (string-to-number (match-string 2)))
