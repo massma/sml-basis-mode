@@ -45,12 +45,12 @@
   :group 'sml)
 
 (defcustom sml-basis-file sml-basis-file--standard
-  "Optional action to perform when build fails."
+  "The SML Basis file path."
   :type '(file)
   :group 'sml-basis
   :safe #'string-or-null-p)
 
-(defconst sml-basis-buffer "*SML-basis*")
+(defvar sml-basis-buffer "*SML-basis*")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Search
@@ -203,7 +203,17 @@ that ships with sml-basis-mode!"
   :lighter " basis"
   :after-hook
   (if (not (member sml-basis-buffer (mapcar 'buffer-name (buffer-list))))
-      (let ((buffer (current-buffer)))
+      (let ((buffer (current-buffer))
+            (basis-path (concat (file-name-directory buffer-file-name)
+                          "current-proj.basis")))
+        (make-local-variable 'sml-basis-file)
+        (make-local-variable 'sml-basis-buffer)
+        (if (file-exists-p basis-path)
+            (progn
+              (setq-local sml-basis-file basis-path)
+              (setq-local sml-basis-buffer
+                          (concat "*SML-basis(" (file-name-directory basis-path)
+                                  ")*"))))
         (find-file-read-only sml-basis-file)
         (rename-buffer sml-basis-buffer)
         (let ((oldmap (cdr (assoc 'sml-basis-mode minor-mode-map-alist)))

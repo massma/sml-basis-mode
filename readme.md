@@ -24,9 +24,17 @@ MLton's implementation of the Standard ML Basis Library. However you
 can customize `sml-basis-file` to use your own basis file, and this is
 recommended in order to expose your own code to the search, and to
 allow you to jump to source code from the basis file (see the function
-`sml-basis-goto-item`, bound to `M-.` in the buffer `*SML-basis*`).
+`sml-basis-goto-item`, bound to `M-.` in the buffer
+`*SML-basis*`). Alternatively, `sml-basis-mode` will automatically
+search for a file called `current-proj.basis` in the parent directory
+of the sml file you are working on, and if `current-proj.basis` exists
+it will use it as the basis file for that sml buffer (locally).
 
 Functionality-wise, the end goal is to fill a similar role as
 [hoogle](https://hoogle.haskell.org/), but simpler (and very crude and
 unpolished), more hackable, and using emacs buffers instead of the
 browser/CLI.
+
+One added benefit is that because we load an SML basis buffer with SML
+major mode turned on, dabbrev-expand gives pretty decent and
+noninvasive auto-complete.
